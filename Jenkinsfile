@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        VENV_PATH = './venv'
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -10,14 +14,22 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip3 install -r requirements.txt'
+                sh '''
+                    python3 -m venv ${VENV_PATH}
+                    . ${VENV_PATH}/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Restart Flask App') {
             steps {
-                sh 'pm2 delete flask || true'
-                sh 'pm2 start app.py --name flask'
+                sh '''
+                    . ${VENV_PATH}/bin/activate
+                    pm2 delete flask || true
+                    pm2 start app.py --name flask
+                '''
             }
         }
     }
